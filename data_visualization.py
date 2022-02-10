@@ -1,7 +1,10 @@
 import matplotlib.pyplot as plt
 import csv
+import math
 import numpy as np
 import pandas as pd
+import pickle as pkl
+import band_gap_pymatgen as bgp
 from pymatgen.ext.matproj import MPRester
 with MPRester("sLhOEz6qQG8r4Tym") as m:
     def dict_to_csv(mp_data,file_name):
@@ -20,14 +23,15 @@ with MPRester("sLhOEz6qQG8r4Tym") as m:
         i = 0
         for key in all_csv.keys():
             print(all_csv[key].value_counts().sort_index())
-            all_csv[key].hist(bins=nbins)
+            plt.hist(all_csv[all_csv['band_gap'] == 0.0], all_csv[all_csv['band_gap'] > 0.0], bins=nbins)
+            # all_csv[key].hist(bins=nbins)
             plt.xlabel(str(key))
             plt.ylabel('counts')
             plt.title('Number of Elements Histogram')
             i += 1
         plt.show()
 
-    def obtain_data():
+    def obtain_bandgap_data():
         mp_data = m.query(criteria={"e_above_hull": 0}, properties=["band_gap"])
         #mp_data = m.query(criteria={'material_id': 'mp-1605'}, properties=['pretty_formula',"initial_structure"])
         #print(mp_data,'\n', type(mp_data[0]['initial_structure']))
@@ -37,7 +41,26 @@ with MPRester("sLhOEz6qQG8r4Tym") as m:
             dict_writer.writeheader()
             dict_writer.writerows(mp_data)
 
+    def sigmoid(x):
+        a = []
+        for item in x:
+            a.append(1 / (1 + math.exp(-item)))
+        return a
 
-    #mp_data = m.query(criteria={"e_above_hull": 0}, properties=["nelements"])
-    #file_name = dict_to_csv(mp_data,"nelements")
-    plot_csv_hist('nelements.csv')
+
+    x = np.arange(-10., 10., 0.2)
+    sig = sigmoid(x)
+    plt.plot(x, sig)
+    plt.title("The Sigmoid Function", size=18)
+    plt.xlabel("Z", size=14)
+    plt.ylabel("g(z)", size=14)
+    plt.show()
+#with open("Target tensors 5Feb.p", 'rb') as y, open("Features tensors 5Feb.p", 'rb') as x:
+
+    #x_array = np.array(x_tensors_pkl)
+    #x_df = pd.DataFrame(x_array)
+    #x_df.to_csv('features_CSV.csv')
+    #mp_data = m.query(criteria={"e_above_hull": 0}, properties=["initial_structure"])
+    #file_name = dict_to_csv(mp_data,"initial_structures")
+    #plot_csv_hist('nelements.csv')
+    mp_data = m.query(criteria={'material_id': 'mp-556442'}, properties=["initial_structure","band_gap"])
